@@ -10,18 +10,24 @@ class Lexer:
     # Move to the next position in the code.
     def advance(self):
         # TODO: Students need to complete the logic to advance the position.
-        self.position += 1
+        self.position += 1 # changes to next condition 
+        self.current_char = self.code[self.position]
 
     # Skip whitespaces.
     def skip_whitespace(self):
         # TODO: Complete logic to skip whitespaces.
         if self.current_char == " ":
             self.advance()
+            self.current_char = self.code[self.position]
 
     # Tokenize an identifier.
     def identifier(self):
         result = ''
         # TODO: Complete logic for handling identifiers.
+        letter = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        digit = "0123456789"
+        if self.current_char in letter or self.current_char in digit or self.current_char == '_':
+            result = self.current_char
         return ('IDENTIFIER', result)
 
     # Tokenize a number.
@@ -47,7 +53,9 @@ class Lexer:
                 return self.number()
 
             # TODO: Add logic for operators and punctuation tokens.
-            
+            if self.current_char == "IDENTIFIER":
+                return self.identifier()
+
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
 
         return ('EOF', None)
