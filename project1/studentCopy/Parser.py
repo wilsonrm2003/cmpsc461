@@ -56,6 +56,7 @@ class Lexer:
             if self.current_char == "IDENTIFIER":
                 return self.identifier()
 
+
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
 
         return ('EOF', None)
@@ -64,7 +65,6 @@ class Lexer:
     def tokenize(self):
         # TODO: Implement the logic to collect tokens.
         return self.tokens
-
 
 class Parser:
     def __init__(self, tokens):
@@ -91,6 +91,8 @@ class Parser:
         statements = []
         while self.current_token[0] != 'EOF':
             # TODO: Parse each statement and append it to the list.
+            statements += self.current_token
+            self.current_token = self.tokens.pop() # update current token by poping the tokens
         # TODO: Return an AST node that represents the program.
         return statements
 
@@ -105,15 +107,15 @@ class Parser:
         """
         if self.current_token[0] == 'IDENTIFIER':
             if self.peek() == 'EQUALS':  # Assignment
-                return #AST of assign_stmt
+                return self.assign_stmt() #AST of assign_stmt
             elif self.peek() == 'LPAREN':  # Function call
-                return #AST of function call
+                return self.function_call() #AST of function call
             else:
                 raise ValueError(f"Unexpected token after identifier: {self.current_token}")
         elif self.current_token[0] == 'IF':
-            return #AST of if stmt
+            return self.if_stmt() #AST of if stmt
         elif self.current_token[0] == 'WHILE':
-            return #AST of while stmt
+            return self.while_stmt() #AST of while stmt
         else:
             # TODO: Handle additional statements if necessary.
             raise ValueError(f"Unexpected token: {self.current_token}")
@@ -125,8 +127,8 @@ class Parser:
         x = 5 + 3
         TODO: Implement parsing for assignments, where an identifier is followed by '=' and an expression.
         """
-        
-    
+        identifier = self.current_token
+        expression = self.current_token
         return AST.Assignment(identifier, expression)
 
     def if_stmt(self):
@@ -139,6 +141,7 @@ class Parser:
             # statements
         TODO: Implement the logic to parse the if condition and blocks of code.
         """
+
 
     def while_stmt(self):
         """
@@ -212,6 +215,7 @@ class Parser:
         """
         if self.current_token[0] == 'NUMBER':
             #write your code here
+            return num
         elif self.current_token[0] == 'IDENTIFIER':
             #write your code here
         elif self.current_token[0] == 'LPAREN':
