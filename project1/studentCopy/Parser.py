@@ -61,9 +61,24 @@ class Lexer:
                 return self.number()
 
             # TODO: Add logic for operators and punctuation tokens.
-            if ident
-
-
+            if (self.current_char == "=" or self.current_char == "!"):
+                bool_exp = self.current_char
+                self.advance()
+                if self.current_char == "=":
+                    bool_exp = bool_exp + self.current_char
+                    return ("BOOLEAN_EXPRESSION", bool_exp)
+                return ("EQUALS", bool_exp)
+            if (self.current_char == "<" or self.current_char == ">"):
+                return ("BOOLEAN_EXPRESSION", self.current_char)
+            if (self.current_char == "+" or self.current_char == "-"):
+                return ("EXPRESSION", self.current_char)
+            if (self.current_char == '*' or self.current_char == "/"):
+                return ("TERM", self.current_char)
+            if (self.current_char == "("):
+                return ("LPAREN", self.current_char)
+            if (self.current_char == ","):
+                return ("COMMA", self.current_char)
+            
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
 
         return ('EOF', None)
@@ -71,6 +86,9 @@ class Lexer:
     # Collect all tokens into a list.
     def tokenize(self):
         # TODO: Implement the logic to collect tokens.
+        while self.current_char is not None:
+            self.tokens += self.token()
+            self.advance()
         return self.tokens
 
 class Parser:
@@ -87,7 +105,8 @@ class Parser:
     def advance(self):
         # Move to the next token in the list.
         # TODO: Ensure the parser doesn't run out of tokens.
-        self.current_token = self.tokens.pop(0)
+        if self.peek() is not None:
+            self.current_token = self.tokens.pop(0)
 
     def parse(self):
         """
@@ -105,7 +124,7 @@ class Parser:
         while self.current_token[0] != 'EOF':
             # TODO: Parse each statement and append it to the list.
             statements += self.current_token
-            self.current_token = self.tokens.pop() # update current token by poping the tokens
+            self.advance() # update current token by poping the tokens
         # TODO: Return an AST node that represents the program.
         return statements
 
