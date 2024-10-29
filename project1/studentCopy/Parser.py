@@ -66,18 +66,30 @@ class Lexer:
                 self.advance()
                 if self.current_char == "=":
                     bool_exp = bool_exp + self.current_char
-                    return ("BOOLEAN_EXPRESSION", bool_exp)
+                    if bool_exp == "!=":
+                        return ("NEQ", bool_exp)
+                    return ("EQ", bool_exp)
                 return ("EQUALS", bool_exp)
-            if (self.current_char == "<" or self.current_char == ">"):
-                return ("BOOLEAN_EXPRESSION", self.current_char)
-            if (self.current_char == "+" or self.current_char == "-"):
-                return ("EXPRESSION", self.current_char)
-            if (self.current_char == '*' or self.current_char == "/"):
-                return ("TERM", self.current_char)
+            if (self.current_char == "<"): 
+                return ("LESS", self.current_char)
+            if (self.current_char == ">"):
+                return ("GREATER", self.current_char)
+            if (self.current_char == "+"):
+                return ("PLUS", self.current_char)
+            if (self.current_char == "-"):
+                return ("MINUS", self.current_char)
+            if (self.current_char == '*'):
+                return ("MULTIPLY", self.current_char)
+            if (self.current_char == "/"):
+                return ("DIVIDE", self.current_char)
             if (self.current_char == "("):
                 return ("LPAREN", self.current_char)
+            if (self.current_char == ")"):
+                return ("RPAREN", self.current_char)
             if (self.current_char == ","):
                 return ("COMMA", self.current_char)
+            if (self.current_char == ":"):
+                return ("COLON", self.current_char)
             
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
 
