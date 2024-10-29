@@ -1,6 +1,9 @@
 import ASTNodeDefs as AST
 
 class Lexer:
+    # Write a lexer to tokenize input code into meaningful tokens (e.g., keywords,
+    # operators, identifiers, numbers).
+    # Handle basic tokens like if, else, while, +, -, *, /, =, !=, ==, <, >, (, ), :, etc.
     def __init__(self, code):
         self.code = code
         self.position = 0
@@ -33,7 +36,13 @@ class Lexer:
     # Tokenize a number.
     def number(self):
         # TODO: Implement logic to tokenize numbers.
-        return ('NUMBER', 0)
+        digit = "0123456789"
+        num = 0
+        num_place = 1
+        if self.current_char in digit:
+            num = self.current_char * num_place
+            num_place = num_place * 10
+        return ('NUMBER', num)
 
     def token(self):
         while self.current_char is not None:
@@ -55,6 +64,7 @@ class Lexer:
             # TODO: Add logic for operators and punctuation tokens.
             if self.current_char == "IDENTIFIER":
                 return self.identifier()
+            if self.current_char == ""
 
 
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
@@ -67,6 +77,12 @@ class Lexer:
         return self.tokens
 
 class Parser:
+    # Build a parser that converts a token stream into an Abstract Syntax Tree (AST).
+    # Implement parsing logic for different constructs like assignment statements (x =
+    # expression), binary operations (expression1 + expression2), boolean expressions (x
+    # == y), if-else statements, while loops, and function calls.
+    # Use recursive descent parsing methods to generate AST nodes for these
+    # constructs.
     def __init__(self, tokens):
         self.tokens = tokens
         self.current_token = tokens.pop(0)  # Start with the first token
