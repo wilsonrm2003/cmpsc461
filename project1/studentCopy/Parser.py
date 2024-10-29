@@ -105,7 +105,7 @@ class Parser:
     def advance(self):
         # Move to the next token in the list.
         # TODO: Ensure the parser doesn't run out of tokens.
-        if self.peek() is not None:
+        if self.tokens.peek() is not None:
             self.current_token = self.tokens.pop(0)
 
     def parse(self):
@@ -174,6 +174,8 @@ class Parser:
         TODO: Implement the logic to parse the if condition and blocks of code.
         """
 
+        return AST.IfStatement(condition, then_block, else_block)
+
 
     def while_stmt(self):
         """
@@ -224,7 +226,7 @@ class Parser:
         TODO: Implement parsing for boolean expressions.
         """
         # write your code here, for reference check expression function
-        return 
+        return AST.BooleanExpression(left, right)
 
     def term(self):
         """
@@ -276,7 +278,6 @@ class Parser:
         return args
 
     def expect(self, token_type):
-       
         if self.current_token[0] == token_type:
             self.advance()  # Move to the next token
         else:
