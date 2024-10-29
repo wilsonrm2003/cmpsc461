@@ -27,21 +27,20 @@ class Lexer:
     def identifier(self):
         result = ''
         # TODO: Complete logic for handling identifiers.
-        letter = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        digit = "0123456789"
-        if self.current_char in letter or self.current_char in digit or self.current_char == '_':
-            result = self.current_char
+        while (self.current_char.isalpha() or self.current_char.isdigit() or self.current_char == '_'):
+            result = result + self.current_char
+            self.advance()
         return ('IDENTIFIER', result)
 
     # Tokenize a number.
     def number(self):
         # TODO: Implement logic to tokenize numbers.
-        digit = "0123456789"
         num = 0
         num_place = 1
-        if self.current_char in digit:
+        while (self.current_char.isdigit()):
             num = self.current_char * num_place
             num_place = num_place * 10
+            self.advance()
         return ('NUMBER', num)
 
     def token(self):
@@ -62,9 +61,7 @@ class Lexer:
                 return self.number()
 
             # TODO: Add logic for operators and punctuation tokens.
-            if self.current_char == "IDENTIFIER":
-                return self.identifier()
-            if self.current_char == ""
+            if ident
 
 
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
