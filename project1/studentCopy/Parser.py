@@ -29,16 +29,18 @@ class Lexer:
         result = ''
         # TODO: Complete logic for handling identifiers.
         while (self.current_char.isalpha() or self.current_char.isdigit() or self.current_char == '_'):
-            result = result + (str)(self.current_char)
+            result += self.current_char # add to result 
             self.advance()
         return ('IDENTIFIER', result)
 
     # Tokenize a number.
     def number(self):
         # TODO: Implement logic to tokenize numbers.
-        num = (int)(self.current_char)
-        self.advance()
-        return ('NUMBER', num)
+        num = ""
+        while self.current_char and self.current_char.isdigit(): # while there is a char and the char is a number
+            num += self.current_char # saves number as string
+            self.advance()
+        return ('NUMBER', int(num)) # return int of the string num
 
     def token(self):
         while self.current_char is not None:
@@ -175,7 +177,6 @@ class Parser:
             return self.while_stmt() #AST of while stmt
         else:
             # TODO: Handle additional statements if necessary.
-            
             raise ValueError(f"Unexpected token: {self.current_token}")
 
     def assign_stmt(self):
@@ -205,7 +206,11 @@ class Parser:
         condition = self.boolean_expression()
         self.expect("COLON")
         then_block = self.block()
-        else_block = self.block()
+        if self.current_token[0] == "ELSE":
+            self.expect("ELSE")
+            else_block = self.block()
+        else:
+            else_block = None
         return AST.IfStatement(condition, then_block, else_block)
 
     def while_stmt(self):
@@ -234,7 +239,7 @@ class Parser:
         """
         statements = []
         # write your code here
-        while self.current_token[0] == "BLOCK":
+        while self.current_token[0] != "EOF":
             statements.append(self.statement())
         return AST.Block(statements)
 
@@ -306,12 +311,11 @@ class Parser:
             return ident # returns the identifier
         elif self.current_token[0] == 'LPAREN':
             #write your code here
-            lparen = self.current_token # save left paren
-            while self.current_token[0] != "RPAREN":
-                expr = self.expression()
-                self.advance()
-            rparen = self.current_token
-            return [lparen, expr, rparen]
+            lparen = self.current_token
+            self.advance()
+            expression = self.expression()
+            self.expect("RPAREN")
+            return expression
         elif self.current_token[0] == "EQUALS":
             return self.expression()
         else:
@@ -324,7 +328,7 @@ class Parser:
         myFunction(arg1, arg2)
         TODO: Implement parsing for function calls with arguments.
         """
-        func_name = self.current_token[1]
+        func_name = self.current_token
         self.advance()
         self.expect("LPAREN")
         args = self.arg_list()
@@ -337,10 +341,12 @@ class Parser:
         arg1, arg2, arg3
         TODO: Implement the logic to parse comma-separated arguments.
         """
-        args = []
-        while (self.current_token[0] == "COMMA"):
+        args = [self.expression()]
+        while (self.current_token[0] != "RPAREN" and self.current_token[0] != "EOF"):
             args.append(self.expression()) # add the expressions to the args list
-            self.expect("RPAREN")
+            self.expect("COMMA")
+        if self.current_token[0] == "RPAREN":
+            self.advance()
         return args
 
     def expect(self, token_type):
