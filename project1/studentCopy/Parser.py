@@ -36,12 +36,8 @@ class Lexer:
     # Tokenize a number.
     def number(self):
         # TODO: Implement logic to tokenize numbers.
-        num = 0
-        num_place = 1
-        while (self.current_char.isdigit()):
-            num = self.current_char * num_place
-            num_place = num_place * 10
-            self.advance()
+        num = (int)(self.current_char)
+        self.advance()
         return ('NUMBER', num)
 
     def token(self):
@@ -52,45 +48,61 @@ class Lexer:
             if self.current_char.isalpha():
                 ident = self.identifier()
                 if ident[1] == 'if':
+                    self.advance()
                     return ('IF', 'if')
                 elif ident[1] == 'else':
+                    self.advance()
                     return ('ELSE', 'else')
                 elif ident[1] == 'while':
+                    self.advance()
                     return ('WHILE', 'while')
                 return ident
             if self.current_char.isdigit():
                 return self.number()
 
             # TODO: Add logic for operators and punctuation tokens.
-            if (self.current_char == "=" or self.current_char == "!"):
-                bool_exp = self.current_char
+            if (self.current_char == "="):
                 self.advance()
                 if self.current_char == "=":
-                    bool_exp = bool_exp + self.current_char
-                    if bool_exp == "!=":
-                        return ("NEQ", bool_exp)
-                    return ("EQ", bool_exp)
-                return ("EQUALS", bool_exp)
+                    self.advance()
+                    return ("EQ", "==")
+                return ("EQUALS", "=")
+            if (self.current_char == "!"):
+                self.advance()
+                if self.current_char == "=":
+                    self.advance()
+                    return ("NEQ", "!=")
+                continue
             if (self.current_char == "<"): 
-                return ("LESS", self.current_char)
+                self.advance()
+                return ("LESS", "<")
             if (self.current_char == ">"):
-                return ("GREATER", self.current_char)
+                self.advance()
+                return ("GREATER", ">")
             if (self.current_char == "+"):
-                return ("PLUS", self.current_char)
+                self.advance()
+                return ("PLUS", "+")
             if (self.current_char == "-"):
-                return ("MINUS", self.current_char)
+                self.advance()
+                return ("MINUS", "-")
             if (self.current_char == '*'):
-                return ("MULTIPLY", self.current_char)
+                self.advance()
+                return ("MULTIPLY", "*")
             if (self.current_char == "/"):
-                return ("DIVIDE", self.current_char)
+                self.advance()
+                return ("DIVIDE", "/")
             if (self.current_char == "("):
-                return ("LPAREN", self.current_char)
+                self.advance()
+                return ("LPAREN", "(")
             if (self.current_char == ")"):
-                return ("RPAREN", self.current_char)
+                self.advance()
+                return ("RPAREN", ")")
             if (self.current_char == ","):
-                return ("COMMA", self.current_char)
+                self.advance()
+                return ("COMMA", ",")
             if (self.current_char == ":"):
-                return ("COLON", self.current_char)
+                self.advance()
+                return ("COLON", ",")
             
             raise ValueError(f"Illegal character at position {self.position}: {self.current_char}")
 
@@ -101,7 +113,7 @@ class Lexer:
         # TODO: Implement the logic to collect tokens.
         while self.current_char is not None:
             self.tokens.append(self.token())
-            self.advance()
+        
         return self.tokens
 
 class Parser:
@@ -113,22 +125,21 @@ class Parser:
     # constructs.
     def __init__(self, tokens):
         self.tokens = tokens
+        print(tokens) # print tokens (for debugging)
         self.current_token = tokens.pop(0)  # Start with the first token
 
     def advance(self):
         # Move to the next token in the list.
         # TODO: Ensure the parser doesn't run out of tokens.
-        if  self.tokens: # if tokens is not none
+        if (self.tokens): # if tokens is not none
             self.current_token = self.tokens.pop(0) # update current token
-        else:
-            self.current_token = ("EOF", None) # update current token to ("EOF", None) as there are no more elements in the list
 
     def parse(self):
         """
         Entry point for the parser. It will process the entire program.
         TODO: Implement logic to parse multiple statements and return the AST for the entire program.
         """
-        return self.program()
+        return self.program() # return the ast for the program
 
     def program(self):
         """
@@ -139,7 +150,6 @@ class Parser:
         while self.current_token[0] != 'EOF':
             # TODO: Parse each statement and append it to the list.
             statements.append(self.statement())
-            self.advance() # update current token by poping the tokens
         # TODO: Return an AST node that represents the program.
         return statements
 
@@ -165,18 +175,19 @@ class Parser:
             return self.while_stmt() #AST of while stmt
         else:
             # TODO: Handle additional statements if necessary.
-            if self.current_token[0] == "EQUALS":
-                return self.assign_stmt()
+            
             raise ValueError(f"Unexpected token: {self.current_token}")
 
     def assign_stmt(self):
         """
         Parses assignment statements.
         Example:
-        x = 5 + 3
+        x = 5 + 3  
         TODO: Implement parsing for assignments, where an identifier is followed by '=' and an expression.
         """
-        identifier = self.current_token[1]
+        identifier = self.current_token
+        self.advance()
+        self.expect("EQUALS")
         expression = self.expression()         
         return AST.Assignment(identifier, expression)
 
@@ -190,7 +201,9 @@ class Parser:
             # statements
         TODO: Implement the logic to parse the if condition and blocks of code.
         """
+        self.expect("IF")
         condition = self.boolean_expression()
+        self.expect("COLON")
         then_block = self.block()
         else_block = self.block()
         return AST.IfStatement(condition, then_block, else_block)
@@ -203,7 +216,9 @@ class Parser:
             # statements
         TODO: Implement the logic to parse while loops with a condition and a block of statements.
         """
+        self.advance("WHILE")
         condition = self.boolean_expression()
+        self.advance()
         block = self.block()
         return AST.WhileStatement(condition, block)
 
@@ -248,7 +263,7 @@ class Parser:
         # write your code here, for reference check expression function
         left =  self.term() # parse the first term
         while (self.current_token[0] in ["EQ", "NEQ", "LESS", "GREATER"]): # handle ==, !=, <, and >
-            op = self.current_token[1] # capture operator
+            op = self.current_token # capture operator
             self.advance() # skip the operator
             right = self.term() # parse the next term
             left = AST.BooleanExpression(left, op, right) # do the boolean operations
@@ -264,7 +279,7 @@ class Parser:
         # write your code here, for reference check expression function
         left = self.factor() # parse the first factor
         while (self.current_token[0] in ["MULTIPLY", "DIVIDE"]): # handle * and /
-            op = self.current_token[1] # capture the operator
+            op = self.current_token # capture the operator
             self.advance() # skip the operator
             right = self.factor() # parse the next factor 
             left = AST.BinaryOperation(left, op, right) # do operations and save to left so it evaluates from left to right
@@ -281,10 +296,14 @@ class Parser:
         """
         if self.current_token[0] == 'NUMBER':
             #write your code here
-            return self.current_token[1] # returns the number
+            num = self.current_token
+            self.advance()
+            return num # returns the number
         elif self.current_token[0] == 'IDENTIFIER':
             #write your code here
-            return self.current_token[1] # returns the identifier
+            ident = self.current_token
+            self.advance()
+            return ident # returns the identifier
         elif self.current_token[0] == 'LPAREN':
             #write your code here
             lparen = self.current_token # save left paren
@@ -305,7 +324,9 @@ class Parser:
         myFunction(arg1, arg2)
         TODO: Implement parsing for function calls with arguments.
         """
-        func_name = self.current_token
+        func_name = self.current_token[1]
+        self.advance()
+        self.expect("LPAREN")
         args = self.arg_list()
         return AST.FunctionCall(func_name, args)
 
@@ -318,8 +339,8 @@ class Parser:
         """
         args = []
         while (self.current_token[0] == "COMMA"):
-            args.append(self.expression())
-            self.advance()
+            args.append(self.expression()) # add the expressions to the args list
+            self.expect("RPAREN")
         return args
 
     def expect(self, token_type):
