@@ -171,8 +171,8 @@ class Parser:
         x = 5 + 3
         TODO: Implement parsing for assignments, where an identifier is followed by '=' and an expression.
         """
-        identifier = self.current_token
-        expression = self.current_token
+        identifier = self.current_token[1]
+        expression = self.expression()         
         return AST.Assignment(identifier, expression)
 
     def if_stmt(self):
@@ -185,9 +185,10 @@ class Parser:
             # statements
         TODO: Implement the logic to parse the if condition and blocks of code.
         """
-
+        condition = self.boolean_expression()
+        then_block = self.block()
+        else_block = self.block()
         return AST.IfStatement(condition, then_block, else_block)
-
 
     def while_stmt(self):
         """
@@ -197,7 +198,8 @@ class Parser:
             # statements
         TODO: Implement the logic to parse while loops with a condition and a block of statements.
         """
-
+        condition = self.boolean_expression()
+        block = self.block()
         return AST.WhileStatement(condition, block)
 
     def block(self):
@@ -212,6 +214,8 @@ class Parser:
         """
         statements = []
         # write your code here
+        while self.current_token[0] == "BLOCK":
+            statements.append(self.statement())
         return AST.Block(statements)
 
     def expression(self):
@@ -226,7 +230,7 @@ class Parser:
             op = self.current_token  # Capture the operator
             self.advance()  # Skip the operator
             right = self.term()  # Parse the next term
-            left = AST.BinaryOperation(left, op, right)
+            left = AST.BinaryOperation(left, op, right) # do operations and save to left so it evaluates from left to right
     
         return left
 
@@ -238,7 +242,13 @@ class Parser:
         TODO: Implement parsing for boolean expressions.
         """
         # write your code here, for reference check expression function
-        return AST.BooleanExpression(left, right)
+        left =  self.term() # parse the first term
+        while (self.current_token[0] in ["EQ", "NEQ", "LESS", "GREATER"]): # handle ==, !=, <, and >
+            op = self.current_token[1] # capture operator
+            self.advance() # skip the operator
+            right = self.term() # parse the next term
+            left = AST.BooleanExpression(left, op, right) # do the boolean operations
+        return left
 
     def term(self):
         """
@@ -248,7 +258,13 @@ class Parser:
         TODO: Implement the parsing for multiplication and division.
         """
         # write your code here, for reference check expression function
-        return 
+        left = self.factor() # parse the first factor
+        while (self.current_token[0] in ["MULTIPLY", "DIVIDE"]): # handle * and /
+            op = self.current_token[1] # capture the operator
+            self.advance() # skip the operator
+            right = self.factor() # parse the next factor 
+            left = AST.BinaryOperation(left, op, right) # do operations and save to left so it evaluates from left to right
+        return left
 
     def factor(self):
         """
@@ -261,11 +277,18 @@ class Parser:
         """
         if self.current_token[0] == 'NUMBER':
             #write your code here
-            return num
+            return self.current_token[1]
         elif self.current_token[0] == 'IDENTIFIER':
             #write your code here
+            return self.current_token[1]
         elif self.current_token[0] == 'LPAREN':
             #write your code here
+            lparen = self.current_token # save left paren
+            while self.current_token[0] != "RPAREN":
+                expr = self.expression()
+                self.advance()
+            rparen = self.current_token
+            return [lparen, expr, rparen]
         else:
             raise ValueError(f"Unexpected token in factor: {self.current_token}")
 
@@ -276,7 +299,8 @@ class Parser:
         myFunction(arg1, arg2)
         TODO: Implement parsing for function calls with arguments.
         """
-        
+        func_name = self.current_token
+        args = self.arg_list()
         return AST.FunctionCall(func_name, args)
 
     def arg_list(self):
@@ -287,6 +311,9 @@ class Parser:
         TODO: Implement the logic to parse comma-separated arguments.
         """
         args = []
+        while (self.current_token[0] == "COMMA"):
+            args.append(self.expression())
+            self.advance()
         return args
 
     def expect(self, token_type):
