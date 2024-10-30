@@ -14,13 +14,13 @@ class Lexer:
     def advance(self):
         # TODO: Students need to complete the logic to advance the position.
         self.position += 1 # changes to next condition 
-        self.current_char = self.code[self.position]
+        if self.position < len(self.code):
+            self.current_char = self.code[self.position] # updates current char
 
     # Skip whitespaces.
     def skip_whitespace(self):
         # TODO: Complete logic to skip whitespaces.
-        if self.current_char == " ":
-            self.advance()
+        self.advance()
 
     # Tokenize an identifier.
     def identifier(self):
