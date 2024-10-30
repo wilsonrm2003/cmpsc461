@@ -21,14 +21,13 @@ class Lexer:
         # TODO: Complete logic to skip whitespaces.
         if self.current_char == " ":
             self.advance()
-            self.current_char = self.code[self.position]
 
     # Tokenize an identifier.
     def identifier(self):
         result = ''
         # TODO: Complete logic for handling identifiers.
         while (self.current_char.isalpha() or self.current_char.isdigit() or self.current_char == '_'):
-            result = result + self.current_char
+            result = result + (str)(self.current_char)
             self.advance()
         return ('IDENTIFIER', result)
 
@@ -99,7 +98,7 @@ class Lexer:
     def tokenize(self):
         # TODO: Implement the logic to collect tokens.
         while self.current_char is not None:
-            self.tokens += self.token()
+            self.tokens.append(self.token())
             self.advance()
         return self.tokens
 
