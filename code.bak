@@ -1,0 +1,148 @@
+#lang racket/base
+; Problem 1
+#|need to give station values to start and end ("Times Square" and "Grand Central" = 1, "Williamsburg" and "Astoria" = 2, "Bronx Zoo" and "Staten Island Terminal" = 3)
+  when traveling in same zone fare is $2.50, when traveling between zone 1 and 2 fare is $3.50, when traveling between zone 1 and 3 fare is $4.50,
+  and when traveling between zone 2 and 3 fare is $3.00 |#
+(define (calculateFare start end)
+  (cond ((= (decideZone start) (decideZone end)) 2.50)
+        ((and (= (decideZone start) 1) (= (decideZone end) 2)) 3.50)
+        ((and (= (decideZone start) 2) (= (decideZone end) 1)) 3.50)
+        ((and (= (decideZone start) 1) (= (decideZone end) 3)) 4.50)
+        ((and (= (decideZone start) 3) (= (decideZone end) 1)) 4.50)
+        ((and (= (decideZone start) 2) (= (decideZone end) 3)) 3.00)
+        ((and (= (decideZone start) 3) (= (decideZone end) 2)) 3.00)
+        ))
+;decideZone returns a numerical value for each station so that the fare can be calculated in calculateFare
+(define (decideZone x)
+  (cond ((or (equal? x "Times Square") (equal? x "Grand Central")) 1)
+        ((or (equal? x "Williamsburg") (equal? x "Astoria")) 2)
+        ((or (equal? x "Bronx Zoo") (equal? x "Staten Island Terminal")) 3)
+        ))
+
+; Problem 2.1
+#|recursive function takes two lists: songLengths and repeatCounts and returns a new list where each element is the total duration of the song considering how many
+times it was played. assume if one list is shorter than the other missing repeatCounts are 1 and missing songLengths are 0 |#
+(define (playlist-duration songLengths repeatCounts) (playlist-duration-helper songLengths repeatCounts '()))
+(define (playlist-duration-helper songLengths repeatCounts totalSongDuration)
+  (cond ((null? songLengths) totalSongDuration)
+        ((null? repeatCounts) (append totalSongDuration (list (car songLengths))))
+        (else (playlist-duration-helper (cdr songLengths) (cdr repeatCounts) (append totalSongDuration (list (* (car songLengths) (car repeatCounts))))))
+        ))
+
+; Problem 2.2
+#|recursive function that takes a list of song durations and returns a new list where each element represents the cumulative duration to a point
+if the sum exceeds 100 it should stop adding further songs to the playlist and ensure the last element in the list is 1000|#
+(define (cumulative-playlist-duration songDurations) (cumulative-playlist-duration-helper (cdr songDurations) '() (car songDurations)))
+(define (cumulative-playlist-duration-helper songDurations sumDurationsLst sumDurations)
+  (cond ((>= sumDurations 1000) (append sumDurationsLst (list 1000)))
+        ((null? songDurations) sumDurationsLst)
+        (else (cumulative-playlist-duration-helper (cdr songDurations) (append sumDurationsLst (list sumDurations)) (+ sumDurations (car songDurations))))
+        ))
+
+; Problem 3.1
+#|function takes a nested list of numbers, flattens it to a single list subtracts 1 from each number then triples each number|#
+(define (flatten-subtract-triple lst) (map (lambda (x) (* 3 (- x 1)))
+                                            (flatten-lst lst)))
+(define (flatten-lst lst)
+  (cond ((null? lst) '())
+        ((pair? lst) (append (flatten-lst (car lst)) (flatten-lst (cdr lst))))
+        (else (list lst))
+        ))
+
+
+; Problem 3.2
+#|function that takes a list of numbers and returns a new list of the cumulative sum up to that point, if the cumulative sum is even at any point the
+value at that point is doubled and happens immediately as the sum is calculated (future sums should include the doubled value)|#
+(define (conditional-cumulative-sum lst)
+  (cond ((null? lst) lst)
+        (else (conditional-cumulative-sum-helper (cdr lst) '() (car lst)))
+        ))
+(define (conditional-cumulative-sum-helper lst sumLst condSum)
+  (cond ((and (null? lst) (even? condSum)) (append sumLst (list (* 2 condSum))))
+        ((and (null? lst) (not (even? condSum)) (append sumLst (list condSum))))
+        ((even? condSum) (conditional-cumulative-sum-helper (cdr lst) (append sumLst (list (* 2 condSum))) (+ (* 2 condSum) (car lst))))
+        (else (conditional-cumulative-sum-helper (cdr lst) (append sumLst (list condSum)) (+ condSum (car lst))))
+        ))
+
+
+; Problem 4.1
+#|function that takes a list and returns a new list where each number in the new list is duplicated immediately after itself, non numbers should remain
+unchanged and not be duplicated. there should be no duplicates in sublists|#
+(define (interleave-duplicates lst) (interleave-duplicates-helper lst '()))
+(define (interleave-duplicates-helper lst lst_cp)
+  (cond ((null? lst) lst_cp)
+        ((number? (car lst)) (interleave-duplicates-helper (cdr lst) (append lst_cp (list (car lst) (car lst)))))
+        (else (interleave-duplicates-helper (cdr lst) (append lst_cp (list (car lst)))))
+        ))
+
+
+; Problem 4.2
+#|function that takes a potentially nested list of elements and returns the sum of all numerical elements. the function should recursively transverse
+any sublists to include their numerical elements in the sum and non number elements should be ignored|#
+(define (nested-sum lst) (nested-sum-helper (flatten-lst lst) 0))
+;use same flatten-lst func from 3.1
+(define (nested-sum-helper lst sum_lst)
+  (cond ((null? lst) sum_lst)
+        ((number? (car lst)) (nested-sum-helper (cdr lst) (+ sum_lst (car lst))))
+        (else (nested-sum-helper (cdr lst) sum_lst))
+        ))
+
+;Tests for all problems ;) (comment when finsihed)
+;Problem 1 Tests: 
+#|
+(calculateFare "Times Square" "Grand Central") ;should return 2.5
+(calculateFare "Times Square" "Williamsburg") ;should return 3.5
+(calculateFare "Williamsburg" "Astoria") ;should return 2.5
+(calculateFare "Astoria" "Bronx Zoo") ;should return 3.0
+(calculateFare "Grand Central" "Staten Island Terminal") ;should return 4.5
+|#
+
+;Problem 2.1 Tests:
+#|
+(playlist-duration '(200 180 240) '(2 3 1)) ;should return '(400 540 240)
+(playlist-duration '(150 220) '(3)) ;should return '(450 220)
+|#
+
+;Problem 2.2 Tests:
+#|
+(cumulative-playlist-duration '(200 300 400 200)) ;should return '(200 500 900 1000)
+(cumulative-playlist-duration '(500 600 700)) ;should return '(500 1000)
+(cumulative-playlist-duration '(250 250 500 300)) ;should return '(250 500 1000)
+(cumulative-playlist-duration '(800 200 100)) ;should return '(800 1000)
+(cumulative-playlist-duration '(1001 100)) ;should return '(1000)
+|#
+
+
+;Problem 3.1 Tests:
+#|
+(flatten-subtract-triple '(1 (2 3) (4 (5)))) ;should return '(0 3 6 9 12)
+(flatten-subtract-triple '(7 (8 (9 10)))) ;should return '(18 21 24 27)
+(flatten-subtract-triple '()) ;should return '()
+|#
+
+;Problem 3.2 Tests:
+#|
+(conditional-cumulative-sum '(1 2 3 4)) ;should return '(1 3 12 32)
+(conditional-cumulative-sum '(5 1 2)) ;should return '(5 12 28)
+(conditional-cumulative-sum '()) ;should return '()
+(conditional-cumulative-sum '(6 4 5)) ;should return '(12 32 37)
+(conditional-cumulative-sum '(2 3 7 1)) ;should return '(4 7 28 29)
+(conditional-cumulative-sum '(10)) ;should return '(20)
+(conditional-cumulative-sum '(8 3 1 5)) ;should return '(16 19 40 45)
+|#
+
+;Problem 4.1 Tests:
+#|
+(interleave-duplicates '()) ;should return '()
+(interleave-duplicates '(1 "a" 2 (3))) ;should return '(1 1 "a" 2 2 (3))
+(interleave-duplicates '(4 "b" 5 "c")) ;should return '(4 4 "b" 5 5 "c")
+(interleave-duplicates '(1 (2 3) 4)) ;should return '(1 1 (2 3) 4 4)
+(interleave-duplicates '(7 "x" (8) 9)) ;should return '(7 7 "x" (8) 9 9)
+|#
+
+;Problem 4.2 Tests:
+#|
+(nested-sum '()) ;should return 0
+(nested-sum '(1 2 3)) ;should return 6
+(nested-sum '(1 ("a" (2 #f (3 4)) "b"))) ;should return 10
+|#
