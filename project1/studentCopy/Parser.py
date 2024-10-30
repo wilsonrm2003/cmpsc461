@@ -14,8 +14,10 @@ class Lexer:
     def advance(self):
         # TODO: Students need to complete the logic to advance the position.
         self.position += 1 # changes to next condition 
-        if self.position < len(self.code):
+        if (self.position < len(self.code)): # updates current char if not at end of self.code
             self.current_char = self.code[self.position] # updates current char
+        else:
+            self.current_char = None  # updates current char to None at end of self.code
 
     # Skip whitespaces.
     def skip_whitespace(self):
@@ -116,8 +118,10 @@ class Parser:
     def advance(self):
         # Move to the next token in the list.
         # TODO: Ensure the parser doesn't run out of tokens.
-        if self.tokens.peek() is not None:
-            self.current_token = self.tokens.pop(0)
+        if  self.tokens: # if tokens is not none
+            self.current_token = self.tokens.pop(0) # update current token
+        else:
+            self.current_token = ("EOF", None) # update current token to ("EOF", None) as there are no more elements in the list
 
     def parse(self):
         """
@@ -134,7 +138,7 @@ class Parser:
         statements = []
         while self.current_token[0] != 'EOF':
             # TODO: Parse each statement and append it to the list.
-            statements += self.current_token
+            statements.append(self.statement())
             self.advance() # update current token by poping the tokens
         # TODO: Return an AST node that represents the program.
         return statements
@@ -161,6 +165,8 @@ class Parser:
             return self.while_stmt() #AST of while stmt
         else:
             # TODO: Handle additional statements if necessary.
+            if self.current_token[0] == "EQUALS":
+                return self.assign_stmt()
             raise ValueError(f"Unexpected token: {self.current_token}")
 
     def assign_stmt(self):
@@ -230,7 +236,6 @@ class Parser:
             self.advance()  # Skip the operator
             right = self.term()  # Parse the next term
             left = AST.BinaryOperation(left, op, right) # do operations and save to left so it evaluates from left to right
-    
         return left
 
     def boolean_expression(self):
@@ -276,10 +281,10 @@ class Parser:
         """
         if self.current_token[0] == 'NUMBER':
             #write your code here
-            return self.current_token[1]
+            return self.current_token[1] # returns the number
         elif self.current_token[0] == 'IDENTIFIER':
             #write your code here
-            return self.current_token[1]
+            return self.current_token[1] # returns the identifier
         elif self.current_token[0] == 'LPAREN':
             #write your code here
             lparen = self.current_token # save left paren
@@ -288,6 +293,8 @@ class Parser:
                 self.advance()
             rparen = self.current_token
             return [lparen, expr, rparen]
+        elif self.current_token[0] == "EQUALS":
+            return self.expression()
         else:
             raise ValueError(f"Unexpected token in factor: {self.current_token}")
 
