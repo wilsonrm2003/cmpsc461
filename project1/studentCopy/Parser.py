@@ -127,7 +127,7 @@ class Parser:
     # constructs.
     def __init__(self, tokens):
         self.tokens = tokens
-        print(tokens) # print tokens (for debugging)
+        # print(tokens) # print tokens (for debugging)
         self.current_token = tokens.pop(0)  # Start with the first token
 
     def advance(self):
@@ -221,7 +221,7 @@ class Parser:
             # statements
         TODO: Implement the logic to parse while loops with a condition and a block of statements.
         """
-        self.advance("WHILE")
+        self.expect("WHILE")
         condition = self.boolean_expression()
         self.advance()
         block = self.block()
@@ -239,7 +239,7 @@ class Parser:
         """
         statements = []
         # write your code here
-        while self.current_token[0] != "EOF":
+        while (self.current_token[0] != "EOF" and self.current_token[0] != "ELSE"):
             statements.append(self.statement())
         return AST.Block(statements)
 
@@ -343,8 +343,9 @@ class Parser:
         """
         args = [self.expression()]
         while (self.current_token[0] != "RPAREN" and self.current_token[0] != "EOF"):
-            args.append(self.expression()) # add the expressions to the args list
             self.expect("COMMA")
+            args.append(self.expression()) # add the expressions to the args list
+            
         if self.current_token[0] == "RPAREN":
             self.advance()
         return args
