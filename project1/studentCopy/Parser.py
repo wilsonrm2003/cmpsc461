@@ -345,9 +345,8 @@ class Parser:
         while (self.current_token[0] != "RPAREN" and self.current_token[0] != "EOF"):
             self.expect("COMMA")
             args.append(self.expression()) # add the expressions to the args list
-            
         if self.current_token[0] == "RPAREN":
-            self.advance()
+            self.advance() # skip over rparen
         return args
 
     def expect(self, token_type):
