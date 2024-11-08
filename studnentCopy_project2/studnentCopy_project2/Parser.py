@@ -166,7 +166,7 @@ class Parser:
 
     # TODO: Check if a variable is already declared in the current scope; if so, log an error
     def checkVarDeclared(self, identifier):
-        if identifier[0] == "IDENTIFIER":
+        if identifier[0] not in self.symbol_table:
             self.error(f"Variable {identifier} has already been declared in the current scope")
 
     # TODO: Check if a variable is declared in any accessible scope; if not, log an error
@@ -187,7 +187,9 @@ class Parser:
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
-        return None
+        self.checkVarDeclared(name)
+        
+        return name
 
     def parse(self):
         return self.program()
