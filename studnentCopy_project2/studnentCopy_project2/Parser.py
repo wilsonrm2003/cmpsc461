@@ -100,6 +100,12 @@ class Lexer:
                 self.advance()
                 return ('COLON', ':')
             # TODO: Implement handling for '{' and '}' tokens here (see `tokens.txt` for exact names)
+            if self.current_char == "{":
+                self.advance()
+                return ("LBRACE", "{")
+            if self.current_char == "}":
+                self.advance()
+                return ("RBRACE", "}")
             if self.current_char == '\n':
                 self.advance()
                 continue
