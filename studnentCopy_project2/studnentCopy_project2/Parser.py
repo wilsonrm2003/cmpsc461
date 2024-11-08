@@ -151,11 +151,14 @@ class Parser:
 
     # TODO: Implement logic to enter a new scope, add it to symbol table, and update `scope_stack`
     def enter_scope(self):
-        pass
+        scope_name = "scope" + (str)(self.scope_counter) # set unique scope name for each scope 
+        self.scope_stack.append(scope_name)
+        self.scope_counter += 1
 
     # TODO: Implement logic to exit the current scope, removing it from `scope_stack`
     def exit_scope(self):
-        pass
+        if self.scope_stack:
+            self.scope_stack.pop() # remove last item from scope if scope_stack exists
 
     # Return the current scope name
     def current_scope(self):
@@ -163,22 +166,23 @@ class Parser:
 
     # TODO: Check if a variable is already declared in the current scope; if so, log an error
     def checkVarDeclared(self, identifier):
-        if identifier in self.current_scope:
+        if identifier[0] == "IDENTIFIER":
             self.error(f"Variable {identifier} has already been declared in the current scope")
 
     # TODO: Check if a variable is declared in any accessible scope; if not, log an error
     def checkVarUse(self, identifier):
-        if identifier not in self.current_scope:
+        if identifier not in self.symbol_table:
             self.error(f"Variable {identifier} has not been declared in the current or any enclosing scopes")
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
     def checkTypeMatch2(self, vType, eType, var, exp):
-        if vType != eType:
-            self.error(f"Type Mismatch between {vType} and {eType}")
+        if vType != eType: # checks if the variable types are not the same
+            self.error(f"Type Mismatch between {vType} and {eType}") # returns error if they are not the same
         
 
     # TODO: Implement logic to add a variable to the current scope in `symbol_table`
     def add_variable(self, name, var_type):
+        self.symbol_table.append({name : var_type})
         pass
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
@@ -211,6 +215,7 @@ class Parser:
             return self.decl_stmt()
         elif self.current_token[0] == "LBRACE":
             self.advance()
+            self.enter_scope()
             return self.block()
         else:
             raise ValueError(f"Unexpected token: {self.current_token}")
@@ -286,6 +291,7 @@ class Parser:
         self.expect("WHILE")
         condition = self.boolean_expression()
         self.expect("LBRACE")
+        self.enter_scope()
         block = self.block()
         return AST.WhileStatement(condition, block)
 
@@ -305,6 +311,7 @@ class Parser:
             statements.append(self.statement())
         if self.current_token[0] != "EOF":
             self.expect("RBRACE")
+            self.exit_scope()
         return AST.Block(statements)
 
     # TODO: Implement logic to parse binary operations (e.g., addition, subtraction) with correct precedence and type checking
@@ -373,8 +380,8 @@ class Parser:
             return AST.Factor(num, 'float')
         elif self.current_token[0] == 'IDENTIFIER':
             # TODO: Ensure that you parse the identifier correctly, retrieve its type from the symbol table, and check if it has been declared in the current or any enclosing scopes.
-            var_name = self.current_token[1]
-            var_type = self.current_token[0]
+            var_name = self.current_token
+            var_type = self.get_variable_type(var_name)
             self.advance()
             return AST.Factor(var_name, var_type)
         elif self.current_token[0] == 'LPAREN':
