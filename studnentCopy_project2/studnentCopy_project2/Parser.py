@@ -32,7 +32,12 @@ class Lexer:
     def number(self):
         result = ''
         # TODO: Update this code to handle floating-point numbers 
-
+        is_float = 0 # initalizes is float to zero so doesnt go to float if it is an int
+        while self.current_char is not None and (self.current_char.isdigit() or self.current_char == "."):
+            if self.current_char == ".":
+                is_float = 1 # updates number to a float if there is a . in the number
+            result += self.current_char
+            self.advance()
         if is_float:
             return ('FNUMBER', float(result))
         else:
@@ -198,6 +203,8 @@ class Parser:
             return self.if_stmt()
         elif self.current_token[0] == 'WHILE':
             return self.while_stmt()
+        elif self.current_token[0] == "INT" or self.current_token[0] == "FLOAT":
+            return self.decl_stmt()
         else:
             raise ValueError(f"Unexpected token: {self.current_token}")
 
@@ -210,6 +217,12 @@ class Parser:
         float y = 3.5
         TODO: Implement logic to parse type, identifier, and initialization expression and also handle type checking
         """
+        var_type = self.current_token
+        self.advance()
+        var_name = self.current_token
+        self.advance()
+        self.expect("EQUALS")
+        expression = self.expression()
         return AST.Declaration(var_type, var_name, expression)
 
     # TODO: Parse assignment statements, handle type checking
@@ -221,6 +234,10 @@ class Parser:
         x = y + 5
         TODO: Implement logic to handle assignment, including type checking.
         """
+        var_name = self.current_token
+        self.advance()
+        self.expect("EQUALS")
+        expression = self.expression()
         return AST.Assignment(var_name, expression)
 
     # TODO: Implement the logic to parse the if condition and blocks of code
@@ -236,6 +253,15 @@ class Parser:
         }
         TODO: Implement the logic to parse the if condition and blocks of code.
         """
+        self.expect("IF")
+        condition = self.boolean_expression()
+        self.expect("COLON")
+        then_block = self.block()
+        if self.current_token[0] == "ELSE":
+            self.expect("ELSE")
+            else_block = self.block()
+        else: 
+            else_block = None
         return AST.IfStatement(condition, then_block, else_block)
 
     # TODO: Implement the logic to parse while loops with a condition and a block of statements
@@ -248,6 +274,10 @@ class Parser:
         }
         TODO: Implement the logic to parse while loops with a condition and a block of statements.
         """
+        self.expect("WHILE")
+        condition = self.boolean_expression()
+        self.advance()
+        block = self.block()
         return AST.WhileStatement(condition, block)
 
     # TODO: Implement logic to capture multiple statements as part of a block
@@ -261,6 +291,9 @@ class Parser:
         
         TODO: Implement logic to capture multiple statements as part of a block.
         """
+        statements = []
+        while (self.current_token[0] != "EOF" and self.current_token[0] != "ELSE"):
+            statements.append(self.statement())
         return AST.Block(statements)
 
     # TODO: Implement logic to parse binary operations (e.g., addition, subtraction) with correct precedence and type checking
@@ -289,6 +322,14 @@ class Parser:
         x == 5
         TODO: Implement parsing for boolean expressions and check for type compatibility.
         """
+        left = self.term() # parse first term
+        while (self.current_token[0] in ["EQ", "NEQ", "LESS", "GREATER"]):
+            op = self.current_token # capture operator
+            self.advance() # skip the operator
+            right = self.term() # parse the next term
+            self.checkTypeMatch2(left.value_type, right.value_type, left, right)
+            left = AST.BooleanExpression(left, op, right) # do the boolean operations
+        return left
         
 
     # TODO: Implement parsing for multiplication and division and check for type compatibility
@@ -299,16 +340,31 @@ class Parser:
         x * y / z
         TODO: Implement parsing for multiplication and division and check for type compatibility.
         """
+        left = self.factor() # parse first factor
+        while (self.current_token[0] in ["MULTIPLY", "DIVIDE"]):
+            op = self.current_token # caputre operator
+            self.advance()
+            right = self.factor() # parse next factor
+            self.checkTypeMatch2(left.value_type, right.value_type, left, right)
+            left = AST.BinaryOperation(left, op, right) # do operations
+        return left
         
     def factor(self):
         if self.current_token[0] == 'NUMBER':
             # handle int
+            num = self.current_token
+            self.advance()
             return AST.Factor(num, 'int')
         elif self.current_token[0] == 'FNUMBER':
             # handle float
+            num = self.current_token
+            self.advance()
             return AST.Factor(num, 'float')
         elif self.current_token[0] == 'IDENTIFIER':
             # TODO: Ensure that you parse the identifier correctly, retrieve its type from the symbol table, and check if it has been declared in the current or any enclosing scopes.
+            var_name = self.current_token[1]
+            var_type = self.current_token[0]
+            self.advance()
             return AST.Factor(var_name, var_type)
         elif self.current_token[0] == 'LPAREN':
             self.advance()
