@@ -163,15 +163,19 @@ class Parser:
 
     # TODO: Check if a variable is already declared in the current scope; if so, log an error
     def checkVarDeclared(self, identifier):
-        self.error(f"Variable {identifier} has already been declared in the current scope")
+        if identifier in self.current_scope:
+            self.error(f"Variable {identifier} has already been declared in the current scope")
 
     # TODO: Check if a variable is declared in any accessible scope; if not, log an error
     def checkVarUse(self, identifier):
-        self.error(f"Variable {identifier} has not been declared in the current or any enclosing scopes")
+        if identifier not in self.current_scope:
+            self.error(f"Variable {identifier} has not been declared in the current or any enclosing scopes")
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
     def checkTypeMatch2(self, vType, eType, var, exp):
-        self.error(f"Type Mismatch between {vType} and {eType}")
+        if vType != eType:
+            self.error(f"Type Mismatch between {vType} and {eType}")
+        
 
     # TODO: Implement logic to add a variable to the current scope in `symbol_table`
     def add_variable(self, name, var_type):
@@ -205,6 +209,9 @@ class Parser:
             return self.while_stmt()
         elif self.current_token[0] == "INT" or self.current_token[0] == "FLOAT":
             return self.decl_stmt()
+        elif self.current_token[0] == "LBRACE":
+            self.advance()
+            return self.block()
         else:
             raise ValueError(f"Unexpected token: {self.current_token}")
 
@@ -218,11 +225,13 @@ class Parser:
         TODO: Implement logic to parse type, identifier, and initialization expression and also handle type checking
         """
         var_type = self.current_token
+        self.checkVarDeclared(var_type)
         self.advance()
         var_name = self.current_token
         self.advance()
         self.expect("EQUALS")
         expression = self.expression()
+        self.checkTypeMatch2(var_type[1], expression.value_type, var_name, expression) 
         return AST.Declaration(var_type, var_name, expression)
 
     # TODO: Parse assignment statements, handle type checking
@@ -255,7 +264,7 @@ class Parser:
         """
         self.expect("IF")
         condition = self.boolean_expression()
-        self.expect("COLON")
+        self.expect("LBRACE")
         then_block = self.block()
         if self.current_token[0] == "ELSE":
             self.expect("ELSE")
@@ -276,7 +285,7 @@ class Parser:
         """
         self.expect("WHILE")
         condition = self.boolean_expression()
-        self.advance()
+        self.expect("LBRACE")
         block = self.block()
         return AST.WhileStatement(condition, block)
 
@@ -292,8 +301,10 @@ class Parser:
         TODO: Implement logic to capture multiple statements as part of a block.
         """
         statements = []
-        while (self.current_token[0] != "EOF" and self.current_token[0] != "ELSE"):
+        while (self.current_token[0] != "EOF" and self.current_token[0] != "RBRACE"):
             statements.append(self.statement())
+        if self.current_token[0] != "EOF":
+            self.expect("RBRACE")
         return AST.Block(statements)
 
     # TODO: Implement logic to parse binary operations (e.g., addition, subtraction) with correct precedence and type checking
