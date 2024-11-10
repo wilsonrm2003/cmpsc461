@@ -128,8 +128,6 @@ class Lexer:
                 break
         return self.tokens
 
-
-
 import ASTNodeDefs as AST
 
 class Parser:
@@ -159,7 +157,7 @@ class Parser:
     # TODO: Implement logic to exit the current scope, removing it from `scope_stack`
     def exit_scope(self):
         if self.scope_stack:
-            self.scope_stack.pop() # remove last item from scope if scope_stack exists
+            self.scope_stack.pop(-1) # remove last item from scope if scope_stack exists
 
     # Return the current scope name
     def current_scope(self):
@@ -168,16 +166,18 @@ class Parser:
     # TODO: Check if a variable is already declared in the current scope; if so, log an error
     def checkVarDeclared(self, identifier):
         if self.current_scope() in self.symbol_table: # checks if scope has been added to symbol table yet
-            if identifier in self.symbol_table[self.current_scope()].values(): # checks if variable was not found in the symbol table
-                self.error(f"Variable {identifier} has already been declared in the current scope")
+            for item in self.symbol_table[self.current_scope()]:
+                if identifier == item:
+                    self.error(f"Variable {identifier} has already been declared in the current scope")
 
     # TODO: Check if a variable is declared in any accessible scope; if not, log an error
     def checkVarUse(self, identifier):
-        var_present = 0 
+        var_notpresent = 1 
         for scope in self.symbol_table:
-            if identifier in self.symbol_table[scope]:
-                var_present += 1 
-        if (var_present == 0):    
+            for item in self.symbol_table[scope]:
+                if identifier == item:
+                    var_notpresent = 0 # changes value if variable is not present 
+        if (var_notpresent): #if the variable is not present throw the error
             self.error(f"Variable {identifier} has not been declared in the current or any enclosing scopes")
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
@@ -190,14 +190,13 @@ class Parser:
     def add_variable(self, name, var_type):
         if self.current_scope() not in self.symbol_table:
             self.symbol_table[self.current_scope()] = {}
-        self.symbol_table[self.current_scope()] = ({name : var_type})
+        self.symbol_table[self.current_scope()].update({name : var_type})
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
-        self.checkVarUse(name) # check if the variable has been declared
-        for scope in self.symbol_table:
-            if name in self.symbol_table[scope]:
-                return self.symbol_table[scope][name]
+        for i in self.symbol_table:
+            if name in self.symbol_table[i]:
+                return list(self.symbol_table[i]).index(name)
         return None # if could not find the varibale type 
 
     def parse(self):
@@ -384,18 +383,19 @@ class Parser:
     def factor(self):
         if self.current_token[0] == 'NUMBER':
             # handle int
-            num = self.current_token
+            num = self.current_token[1]
             self.advance()
             return AST.Factor(num, 'int')
         elif self.current_token[0] == 'FNUMBER':
             # handle float
-            num = self.current_token
+            num = self.current_token[1]
             self.advance()
             return AST.Factor(num, 'float')
         elif self.current_token[0] == 'IDENTIFIER':
             # TODO: Ensure that you parse the identifier correctly, retrieve its type from the symbol table, and check if it has been declared in the current or any enclosing scopes.
-            var_name = self.current_token
-            var_type = self.get_variable_type(var_name[1])
+            var_name = self.current_token[1]
+            self.checkVarUse(var_name) # check if variable has been declared
+            var_type = self.get_variable_type(var_name)
             self.advance()
             return AST.Factor(var_name, var_type)
         elif self.current_token[0] == 'LPAREN':
