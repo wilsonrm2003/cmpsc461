@@ -265,6 +265,7 @@ class Parser:
         TODO: Implement logic to handle assignment, including type checking.
         """
         var_name = self.current_token
+        self.checkVarUse(self.current_token[1])
         self.advance()
         self.expect("EQUALS")
         expression = self.expression()
