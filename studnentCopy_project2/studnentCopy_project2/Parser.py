@@ -183,9 +183,10 @@ class Parser:
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
     def checkTypeMatch2(self, vType, eType, var, exp):      
-        if vType != eType: # checks if the variable types are not the same
-            if (vType == "int" and eType == "float") or (vType == "float" and eType == "int"): # only checks for float and int mismatch
-                self.error(f"Type Mismatch between {vType} and {eType}")
+        # print(var, "   ???   ", exp)
+        # print(vType, "   ???   ", eType)
+        if (vType == "int" and eType == "float") or (vType == "float" and eType == "int"): # only checks for float and int mismatch
+            self.error(f"Type Mismatch between {vType} and {eType}")
         
     # TODO: Implement logic to add a variable to the current scope in `symbol_table`
     def add_variable(self, name, var_type):
@@ -247,13 +248,13 @@ class Parser:
         """
         var_type = self.current_token
         self.advance()
-        var_name = self.current_token
+        var_name = self.current_token[1]
         self.expect("IDENTIFIER")
         self.expect("EQUALS")
         expression = self.expression()
-        self.checkVarDeclared(var_name[1]) # check if the variable has already been declared in scope before adding it 
-        self.checkTypeMatch2(var_type[1], expression.value_type, var_name, expression) 
-        self.add_variable(var_name[1], expression) # add variable to the sybol table
+        self.checkVarDeclared(var_name) # check if the variable has already been declared in scope before adding it 
+        self.checkTypeMatch2(var_type, expression.value_type, var_name, expression) 
+        self.add_variable(var_name, expression) # add variable to the sybol table
         return AST.Declaration(var_type, var_name, expression)
 
     # TODO: Parse assignment statements, handle type checking
@@ -265,12 +266,13 @@ class Parser:
         x = y + 5
         TODO: Implement logic to handle assignment, including type checking.
         """
-        var_name = self.current_token
-        self.checkVarUse(self.current_token[1])
+        var_name = self.current_token[1]
+        self.checkVarUse(var_name)
         self.advance()
         self.expect("EQUALS")
         expression = self.expression()
-        self.checkTypeMatch2(self.get_variable_type(var_name[1]), expression.value_type, var_name[1], expression)
+        self.checkTypeMatch2(self.get_variable_type(var_name), expression.value_type, var_name, expression)
+        self.add_variable(var_name, expression)
         return AST.Assignment(var_name, expression)
 
     # TODO: Implement the logic to parse the if condition and blocks of code
@@ -385,7 +387,7 @@ class Parser:
             self.advance()
             right = self.factor() # parse next factor
             self.checkTypeMatch2(left.value_type, right.value_type, left, right)
-            left = AST.BinaryOperation(left, op, right) # do operations
+            left = AST.BinaryOperation(left, op, right, value_type=left.value_type) # do operations
         return left
         
     def factor(self):
