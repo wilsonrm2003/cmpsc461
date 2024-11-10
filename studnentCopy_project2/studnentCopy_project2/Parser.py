@@ -151,9 +151,10 @@ class Parser:
 
     # TODO: Implement logic to enter a new scope, add it to symbol table, and update `scope_stack`
     def enter_scope(self):
+        self.scope_counter += 1
         scope_name = "scope" + (str)(self.scope_counter) # set unique scope name for each scope 
         self.scope_stack.append(scope_name)
-        self.scope_counter += 1
+
 
     # TODO: Implement logic to exit the current scope, removing it from `scope_stack`
     def exit_scope(self):
@@ -166,12 +167,17 @@ class Parser:
 
     # TODO: Check if a variable is already declared in the current scope; if so, log an error
     def checkVarDeclared(self, identifier):
-        if identifier[0] not in self.symbol_table:
-            self.error(f"Variable {identifier} has already been declared in the current scope")
+        if self.current_scope() in self.symbol_table: # checks if scope has been added to symbol table yet
+            if identifier in self.symbol_table[self.current_scope()].values(): # checks if variable was not found in the symbol table
+                self.error(f"Variable {identifier} has already been declared in the current scope")
 
     # TODO: Check if a variable is declared in any accessible scope; if not, log an error
     def checkVarUse(self, identifier):
-        if identifier not in self.symbol_table:
+        var_present = 0 
+        for scope in self.symbol_table:
+            if identifier in self.symbol_table[scope]:
+                var_present += 1 
+        if (var_present == 0):    
             self.error(f"Variable {identifier} has not been declared in the current or any enclosing scopes")
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
@@ -182,14 +188,17 @@ class Parser:
 
     # TODO: Implement logic to add a variable to the current scope in `symbol_table`
     def add_variable(self, name, var_type):
-        self.symbol_table.append({name : var_type})
-        pass
+        if self.current_scope() not in self.symbol_table:
+            self.symbol_table[self.current_scope()] = {}
+        self.symbol_table[self.current_scope()] = ({name : var_type})
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
-        self.checkVarDeclared(name)
-        
-        return name
+        self.checkVarUse(name) # check if the variable has been declared
+        for scope in self.symbol_table:
+            if name in self.symbol_table[scope]:
+                return self.symbol_table[scope][name]
+        return None # if could not find the varibale type 
 
     def parse(self):
         return self.program()
@@ -232,13 +241,14 @@ class Parser:
         TODO: Implement logic to parse type, identifier, and initialization expression and also handle type checking
         """
         var_type = self.current_token
-        self.checkVarDeclared(var_type)
         self.advance()
         var_name = self.current_token
-        self.advance()
+        self.expect("IDENTIFIER")
         self.expect("EQUALS")
         expression = self.expression()
+        self.checkVarDeclared(var_name[1]) # check if the variable has already been declared in scope before adding it 
         self.checkTypeMatch2(var_type[1], expression.value_type, var_name, expression) 
+        self.add_variable(var_name[1], expression) # add variable to the sybol table
         return AST.Declaration(var_type, var_name, expression)
 
     # TODO: Parse assignment statements, handle type checking
@@ -272,9 +282,11 @@ class Parser:
         self.expect("IF")
         condition = self.boolean_expression()
         self.expect("LBRACE")
+        self.enter_scope()
         then_block = self.block()
         if self.current_token[0] == "ELSE":
             self.expect("ELSE")
+            self.enter_scope
             else_block = self.block()
         else: 
             else_block = None
@@ -313,7 +325,7 @@ class Parser:
             statements.append(self.statement())
         if self.current_token[0] != "EOF":
             self.expect("RBRACE")
-            self.exit_scope()
+        self.exit_scope()
         return AST.Block(statements)
 
     # TODO: Implement logic to parse binary operations (e.g., addition, subtraction) with correct precedence and type checking
@@ -383,7 +395,7 @@ class Parser:
         elif self.current_token[0] == 'IDENTIFIER':
             # TODO: Ensure that you parse the identifier correctly, retrieve its type from the symbol table, and check if it has been declared in the current or any enclosing scopes.
             var_name = self.current_token
-            var_type = self.get_variable_type(var_name)
+            var_type = self.get_variable_type(var_name[1])
             self.advance()
             return AST.Factor(var_name, var_type)
         elif self.current_token[0] == 'LPAREN':
