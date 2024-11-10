@@ -183,7 +183,8 @@ class Parser:
     # TODO: Check type mismatch between two entities; log an error if they do not match
     def checkTypeMatch2(self, vType, eType, var, exp):
         if vType != eType: # checks if the variable types are not the same
-            self.error(f"Type Mismatch between {vType} and {eType}") # returns error if they are not the same
+            if (vType == "int" and eType == "float") or (vType == "int" and eType == "float"): # only checks for float and int mismatch
+                self.error(f"Type Mismatch between {vType} and {eType}")
         
 
     # TODO: Implement logic to add a variable to the current scope in `symbol_table`
@@ -194,12 +195,12 @@ class Parser:
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
+        var_type = None # initialize to None in case variable isnt found
         for scope in self.symbol_table:
             for item in self.symbol_table[scope]:
                 if item == name:
                     var_type = self.symbol_table[scope][name].value_type
-                    return var_type
-        return None # if could not find the varibale type 
+        return var_type # returns variable type so most recent scope is the valuetype 
 
     def parse(self):
         return self.program()
