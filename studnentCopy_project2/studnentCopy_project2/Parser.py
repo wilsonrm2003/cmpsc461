@@ -194,9 +194,11 @@ class Parser:
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
-        for i in self.symbol_table:
-            if name in self.symbol_table[i]:
-                return list(self.symbol_table[i]).index(name)
+        for scope in self.symbol_table:
+            for item in self.symbol_table[scope]:
+                if item == name:
+                    var_type = self.symbol_table[scope][name].value_type
+                    return var_type
         return None # if could not find the varibale type 
 
     def parse(self):
