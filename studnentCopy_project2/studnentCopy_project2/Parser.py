@@ -251,6 +251,7 @@ class Parser:
         expression = self.expression()
         self.checkVarDeclared(var_name) # check if the variable has already been declared in scope before adding it 
         self.checkTypeMatch2(var_type, expression.value_type, var_name, expression) 
+        expression.value_type = var_type # after checking typematch set the variable type to intended type 
         self.add_variable(var_name, expression) # add variable to the sybol table
         return AST.Declaration(var_type, var_name, expression)
 
