@@ -195,9 +195,9 @@ test1() # passes
 test2() # passes
 test3()
 test4()
-# test5() # passes
+test5() 
 test6()
-# test7() # passes
+test7() 
 test8()
 print(count)
 
