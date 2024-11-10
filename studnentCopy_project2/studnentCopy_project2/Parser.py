@@ -153,7 +153,6 @@ class Parser:
         scope_name = "scope" + (str)(self.scope_counter) # set unique scope name for each scope 
         self.scope_stack.append(scope_name)
 
-
     # TODO: Implement logic to exit the current scope, removing it from `scope_stack`
     def exit_scope(self):
         if self.scope_stack:
@@ -183,16 +182,14 @@ class Parser:
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
     def checkTypeMatch2(self, vType, eType, var, exp):      
-        # print(var, "   ???   ", exp)
-        # print(vType, "   ???   ", eType)
         if (vType == "int" and eType == "float") or (vType == "float" and eType == "int"): # only checks for float and int mismatch
             self.error(f"Type Mismatch between {vType} and {eType}")
         
     # TODO: Implement logic to add a variable to the current scope in `symbol_table`
     def add_variable(self, name, var_type):
-        if self.current_scope() not in self.symbol_table:
+        if self.current_scope() not in self.symbol_table: # check if current scope is in the symbol table yet
             self.symbol_table[self.current_scope()] = {}
-        self.symbol_table[self.current_scope()].update({name : var_type})
+        self.symbol_table[self.current_scope()].update({name : var_type}) # update dictionary to add the new variable
 
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
@@ -267,12 +264,12 @@ class Parser:
         TODO: Implement logic to handle assignment, including type checking.
         """
         var_name = self.current_token[1]
-        self.checkVarUse(var_name)
         self.advance()
         self.expect("EQUALS")
         expression = self.expression()
+        self.checkVarUse(var_name) # check is var has been declared
         self.checkTypeMatch2(self.get_variable_type(var_name), expression.value_type, var_name, expression)
-        self.add_variable(var_name, expression)
+        #self.add_variable(var_name, expression) # update variable in scope
         return AST.Assignment(var_name, expression)
 
     # TODO: Implement the logic to parse the if condition and blocks of code
