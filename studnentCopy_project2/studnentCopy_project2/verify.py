@@ -194,10 +194,10 @@ passed = 0
 test1() # passes 
 test2() # passes
 test3()
-test4()
+test4() # passes
 test5() 
 test6()
-test7() 
+test7() # passes
 test8()
 print(count)
 

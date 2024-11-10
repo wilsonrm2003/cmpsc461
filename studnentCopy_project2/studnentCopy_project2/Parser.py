@@ -173,15 +173,16 @@ class Parser:
     # TODO: Check if a variable is declared in any accessible scope; if not, log an error
     def checkVarUse(self, identifier):
         var_notpresent = 1 
-        for scope in self.symbol_table:
-            for item in self.symbol_table[scope]:
-                if identifier == item:
-                    var_notpresent = 0 # changes value if variable is not present 
+        for scope in self.scope_stack: # check the scopes in the scope stack
+            if scope in self.symbol_table: # check if the current scope is actually in the symbol table yet
+                for item in self.symbol_table[scope]:
+                    if identifier == item:
+                        var_notpresent = 0 # changes value if variable is not present 
         if (var_notpresent): #if the variable is not present throw the error
             self.error(f"Variable {identifier} has not been declared in the current or any enclosing scopes")
 
     # TODO: Check type mismatch between two entities; log an error if they do not match
-    def checkTypeMatch2(self, vType, eType, var, exp):
+    def checkTypeMatch2(self, vType, eType, var, exp):      
         if vType != eType: # checks if the variable types are not the same
             if (vType == "int" and eType == "float") or (vType == "int" and eType == "float"): # only checks for float and int mismatch
                 self.error(f"Type Mismatch between {vType} and {eType}")
@@ -196,10 +197,11 @@ class Parser:
     # TODO: Retrieve the variable type from `symbol_table` if it exists
     def get_variable_type(self, name):
         var_type = None # initialize to None in case variable isnt found
-        for scope in self.symbol_table:
-            for item in self.symbol_table[scope]:
-                if item == name:
-                    var_type = self.symbol_table[scope][name].value_type
+        for scope in self.scope_stack:
+            if scope in self.symbol_table: # checks if the scope is inside the symbol table before looking for value so doesnt exit scope stack
+                for item in self.symbol_table[scope]:
+                    if item == name:
+                        var_type = self.symbol_table[scope][name].value_type
         return var_type # returns variable type so most recent scope is the valuetype 
 
     def parse(self):
