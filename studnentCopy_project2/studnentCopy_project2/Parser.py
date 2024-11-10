@@ -246,7 +246,7 @@ class Parser:
         float y = 3.5
         TODO: Implement logic to parse type, identifier, and initialization expression and also handle type checking
         """
-        var_type = self.current_token
+        var_type = self.current_token[1]
         self.advance()
         var_name = self.current_token[1]
         self.expect("IDENTIFIER")

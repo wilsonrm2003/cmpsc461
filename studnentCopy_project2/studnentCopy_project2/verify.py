@@ -191,14 +191,14 @@ def test8():
 
 # Running all tests and counting passes
 passed = 0
-test1() 
-# test2() # passes
-# test3() # passes
-# test4() # passes
+test1() # passes
+test2() # passes
+test3() # passes
+test4() # passes
 test5() 
 test6()
-# test7() # passes
-# test8() # passes
+test7() # passes
+test8() # passes
 print(count)
 
 if count == 8:
