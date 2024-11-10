@@ -195,7 +195,7 @@ test1() # passes
 test2() # passes
 test3()
 test4() # passes
-test5() 
+test5() # passes
 test6()
 test7() # passes
 test8() # passes
